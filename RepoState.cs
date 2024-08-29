@@ -5,7 +5,6 @@ namespace GitSeeker;
 
 public class RepoState
 {
-    public readonly string Hash;
     public string LastCommit;
     public Dictionary<string, string> TreeHashes;
 
@@ -16,9 +15,8 @@ public class RepoState
         return Utils.ByteArrayToHex(hash);
     }
     
-    public RepoState(string hash, string lastCommit, Dictionary<string, string> treeHashes)
+    public RepoState(string lastCommit, Dictionary<string, string> treeHashes)
     {
-        Hash = hash;
         LastCommit = lastCommit;
         TreeHashes = treeHashes;
     }

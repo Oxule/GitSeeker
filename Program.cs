@@ -5,14 +5,25 @@ using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-IGitProvider git = new LocalGitProvider("C:\\Projects\\OxyCaptcha\\.git");
+var deserializer = new DeserializerBuilder()
+    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+    .Build();
+var config = deserializer.Deserialize<Configuration>(File.ReadAllText("config.yml"));
+
+var loop = new Thread(()=>Seeker.Loop(config));
+loop.Start();
+Console.ReadLine();
+
+return;
+
+IGitProvider git = new LocalGitProvider("C:\\Projects\\GitSeeker\\.git");
 
 var c = git.GetCommit(git.GetBranches()[0].LastCommit);
 Console.WriteLine(c.Message);
-foreach (var obj in git.GetTree(c.Tree).Objects)
+foreach (var obj in git.GetTreeRecursive(c.Tree))
 {
-    var ch = obj.Directory ? "D" : "F";
-    Console.WriteLine($"({ch}){obj.FileName} - {obj.Hash}");
+    var ch = obj.directory ? "D" : "F";
+    Console.WriteLine($"({ch}){obj.path} - {obj.hash}");
 }
 
 return;
