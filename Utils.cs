@@ -44,4 +44,26 @@ public static class Utils
 
         return objects.ToArray();
     }
+
+    public static bool RepresentFocusDir(this string path, string focus)
+    {
+        var focusParts = new List<string>(focus.Split('\\', '/'));
+        var pathParts = new List<string>(path.Split('\\', '/'));
+        
+        if(focusParts[^1] == "")
+            focusParts.RemoveAt(focusParts.Count-1);
+        if(pathParts[^1] == "")
+            pathParts.RemoveAt(pathParts.Count-1);
+
+        if (pathParts.Count < focusParts.Count)
+            return false;
+        
+        for (int i = 0; i < focusParts.Count; i++)
+        {
+            if (pathParts[i] != focusParts[i])
+                return false;
+        }
+        
+        return true;
+    }
 }

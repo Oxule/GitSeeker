@@ -46,7 +46,6 @@ public static class Seeker
         
         while (true)
         {
-            Console.WriteLine($"Seeking Time (every {SEEK_DELAY_MS}ms)");
             //1.Get Repo Hashes
             //2.1. Compare To State
             //2.2. Do Some Actions
@@ -56,7 +55,6 @@ public static class Seeker
             {
                 //GET NEW STATE
                 var service = config.Services[i];
-                Console.WriteLine($"Checking {service.Name}");
                 var provider = providers[i];
                 var hash = hashes[i];
                 var branch = provider.GetBranches().FirstOrDefault(x=>x.Name==service.Repository.Branch);
@@ -66,7 +64,34 @@ public static class Seeker
                 {
                     //New Commit
                     state[hash].LastCommit = branch.LastCommit;
-                    Console.WriteLine($"Got new commit on {service.Name} at {service.Repository.Branch} with message: \n{provider.GetCommit(branch.LastCommit).Message}");
+                    var commit = provider.GetCommit(branch.LastCommit);
+                    Console.WriteLine($"Got new commit on {service.Name} at {service.Repository.Branch}");
+                    var tree = provider.GetTreeRecursive(commit.Tree);
+                    foreach (var file in tree)
+                    {
+                        if(!file.path.RepresentFocusDir(service.Repository.Focus))
+                            continue;
+                        
+                        Console.WriteLine($"Changed file in focus ({service.Repository.Focus}): {file.path}");
+                        Console.WriteLine("Starting actions...");
+                        //Actions
+                        Dictionary<string, object?> variables = new ();
+                        foreach (var action in service.Actions)
+                        {
+                            Console.WriteLine($"Running [{action.Name}]");
+                            ActionRunner.StartAction(action.Action, action.Parameters, provider, service, variables);
+                        }
+                        
+                        break;
+                    }
+
+                    state[hash].TreeHashes = new ();
+                    foreach (var file in tree)
+                    {
+                        if(!file.path.RepresentFocusDir(service.Repository.Focus))
+                            continue;
+                        state[hash].TreeHashes.Add(file.path, file.hash);
+                    }
                 }
             }
             File.WriteAllText("state.json", JsonConvert.SerializeObject(state));
