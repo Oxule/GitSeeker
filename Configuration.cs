@@ -19,7 +19,7 @@ public class Configuration
         {
             public string Name = "Unnamed";
             public string Action;
-            public Dictionary<string, object?> Parameters;
+            public Dictionary<string, object> Parameters;
         }
 
         public List<ActionInfo> Actions;

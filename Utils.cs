@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using GitSeeker.GitObjects;
+using YamlDotNet.Serialization;
 
 namespace GitSeeker;
 
@@ -65,5 +66,56 @@ public static class Utils
         }
         
         return true;
+    }
+    public static bool RepresentFocusDir(this string path, string focus, out string relativePath)
+    {
+        relativePath = "";
+        var focusParts = new List<string>(focus.Split('\\', '/'));
+        var pathParts = new List<string>(path.Split('\\', '/'));
+        
+        if(focusParts[^1] == "")
+            focusParts.RemoveAt(focusParts.Count-1);
+        if(pathParts[^1] == "")
+            pathParts.RemoveAt(pathParts.Count-1);
+
+        if (pathParts.Count < focusParts.Count)
+            return false;
+        
+        for (int i = 0; i < focusParts.Count; i++)
+        {
+            if (pathParts[i] != focusParts[i])
+                return false;
+        }
+        
+        pathParts.RemoveRange(0, focusParts.Count);
+        relativePath = '/'+string.Join('/', pathParts);
+        
+        return true;
+    }
+
+    
+    public static bool TryGetParameter<T>(this Dictionary<string, object?> parameters, string name, out T? parameter)
+    {
+        parameter = default;
+        
+        if (parameters.TryGetValue(name, out var val) && val is string v)
+        {
+            try
+            {
+                var des = new Deserializer().Deserialize<T>(v);
+                parameter = des;
+                return true;
+            }
+            catch (Exception e) { }
+        }
+        
+        return false;
+    }
+    public static void TryGetParameterChange<T>(this Dictionary<string, object?> parameters, string name, ref T? parameter)
+    {
+        if (parameters.TryGetParameter(name, out T? x))
+        {
+            parameter = x;
+        }
     }
 }
